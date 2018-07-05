@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update sys_domain="global" table="sys_ui_action">
+    <sys_ui_action action="INSERT_OR_UPDATE">
+        <action_name>okta_provision</action_name>
+        <active>true</active>
+        <client>true</client>
+        <comments/>
+        <condition>(current.state == "New" || current.state == "Error") &amp;&amp; new SSOGeneralSettingsHelper().multiSsoPluginInstalled()</condition>
+        <form_action>true</form_action>
+        <form_button>true</form_button>
+        <form_context_menu>false</form_context_menu>
+        <form_link>false</form_link>
+        <form_style/>
+        <hint>Validate the information provided and set up the SSO Identity Provider for Okta</hint>
+        <list_action>false</list_action>
+        <list_banner_button>false</list_banner_button>
+        <list_button>false</list_button>
+        <list_choice>false</list_choice>
+        <list_context_menu>false</list_context_menu>
+        <list_link>false</list_link>
+        <list_save_with_form_button>false</list_save_with_form_button>
+        <list_style/>
+        <name>Provision</name>
+        <onclick>validateAndProvision()</onclick>
+        <order>100</order>
+        <script><![CDATA[function validateAndProvision() {
+    //Do client validation stuff here	
+    if (!validateRequiredFields() || !validatePassword() || !validateOktaInstanceUri()) {
+        return false;
+    }
+    showLoadingDialog();
+    gsftSubmit(null, g_form.getFormElement(), 'okta_provision'); //MUST call the 'Action name' set in this UI Action
+
+
+}
+
+if (typeof window == 'undefined') {
+    provisionProvider();
+}
+
+function provisionProvider() {
+    var settings = new x_okta2_occ.SSOGeneralSettingsHelper();
+    action.setRedirectURL("/x_okta2_occ_provider_setup.do?sysparm_stack=x_okta2_occ_provider_setup_list.do&sysparm_query=sys_idISNOTEMPTY^EQ");
+    current.state = "Processing";
+    current.status = "";
+    current.update();
+
+    var res;
+
+    //Create the Okta Org, if they are not already a customer
+    if (current.existing_customer == "false" || current.existing_customer == false) {
+        var h = new x_okta2_occ.SSOOktaOrgApiHelper();
+        res = h.createTenant();
+        if (!res) {
+            addToStatus("ERROR:  Failed to create tenant.  Stopped provisioning process.  Please correct any issues specified above or click Reset to start over");
+            current.state = "Error";
+    		current.update();
+            return false;
+        }
+    }
+
+    //Create the Okta Application
+    var app = new x_okta2_occ.SSOOktaAppApiHelper();
+    if (!current.okta_app_id || !current.okta_metadata_url) {
+        res = app.createApp();
+        if (!res) {
+            //addToStatus("ERROR:  Failed to create okta SSO Application.  Stopped provisioning process.  Please retry or contact Okta Customer Support.");
+            addToStatus( app.api.generateOktaErrorMessage(true, false) );
+            current.state = "Error";
+    		current.update();
+            return false;
+        }
+    }
+
+    //Get the Metadata
+    if (!current.okta_metadata) {
+        res = app.getAppMetadata();
+        if (!res) {
+            addToStatus("ERROR:  Failed to connect to Metadata.  Stopped provisioning process.  Please retry or contact Okta Customer Support.");
+            current.state = "Error";
+    		current.update();
+            return false;
+        }
+    }
+
+    //Generate IdP Record
+    var idp = new x_okta2_occ.SSOMultiIdpHelper();
+    if (!current.identity_provider) {
+        res = idp.createNewShellIdp("Okta SAML - " + settings.getProperty("okta_app_id"));
+        if (!res) {
+            addToStatus("ERROR: Failed to create a Multi-Provider SAML Identity Provider Record.  Please retry or contact Okta Customer Support.");
+            current.state = "Error";
+    		current.update();
+            return false;
+        }
+        settings.setProperty("identity_provider", res);
+    }
+
+    //Import Metadata
+    res = idp.pushMetadataToIdp(settings.getProperty("identity_provider"), settings.getProperty("okta_metadata"));
+    if (!res) {
+        addToStatus("ERROR: Failed to import the Okta Metadata into the Idp Record. Check log for details");
+        current.state = "Error";
+    	current.update();
+        return false;
+    }
+
+    //The Metadata import will rename the IdP in a format we don't want.  Let's rename it more friendly
+    res = idp.renameIdp("Okta SAML - " + settings.getProperty("okta_app_id"), settings.getProperty("identity_provider"));
+
+	current.state = "Complete";
+    
+    idp.setServiceNowInstanceInfo(settings.getProperty("identity_provider"));
+	
+	//Jakarta does not automatically set the IdP to Active
+	idp.setActive(settings.getProperty("identity_provider"));
+
+    current.update();
+
+}
+
+function addToStatus(msg) {
+	var settings = new x_okta2_occ.SSOGeneralSettingsHelper();
+    var cstatus = settings.getProperty("status");
+    if( cstatus.length > 0 ){
+        var line = "\n-----------------------------------------------------------\n";
+		current.status = msg + "\n"+line + "SYSTEM LOG" + line +cstatus;	
+	} else {
+		current.status = msg;
+	}
+}
+
+
+
+/*   CLIENT SIDE FUNCTIONS    */
+function validateRequiredFields() {
+    g_form.hideAllFieldMsgs();
+    var requiredFields = [];
+    if (g_form.getValue("existing_customer") == "true") {
+        requiredFields.push("okta_api_token");
+        requiredFields.push("okta_instance");
+
+    } else {
+        requiredFields.push("okta_prefix");
+        requiredFields.push("company_name");
+        requiredFields.push("admin_first_name");
+        requiredFields.push("admin_last_name");
+        requiredFields.push("admin_email");
+        requiredFields.push("admin_password_1");
+        requiredFields.push("admin_password_2");
+        requiredFields.push("password_recovery_question");
+        requiredFields.push("password_recovery_answer");
+
+    }
+
+    var requiredFieldsPass = true;
+    for (var rnk = 0; rnk < requiredFields.length; rnk++) {
+        var val = g_form.getValue(requiredFields[rnk]);
+        if (!val || val == "") {
+            g_form.showErrorBox(requiredFields[rnk], "This field is required");
+            //g_form.setMandatory(requiredFields[rnk], true);
+            requiredFieldsPass = false;
+        }
+    }
+    if (!requiredFieldsPass) {
+        return false;
+    }
+    return true;
+}
+
+function validateOktaInstanceUri() {
+    if (g_form.getValue("existing_customer") == "true") {
+        var instance = g_form.getValue("okta_instance");
+        if( instance.indexOf("http")!=0){
+            g_form.showErrorBox("okta_instance", "Okta Instance values need to be in the format of:  https://mydomain.okta.com");
+            return false;
+        }
+    } 
+    return true;
+}
+
+function validatePassword() {
+    if( g_form.getValue("existing_customer") == "true" ){
+        //we don't need to validate password on existing customer
+        return true;
+    }
+    g_form.hideAllFieldMsgs();
+    console.log("p1: " + g_form.getValue("admin_password_1"));
+    console.log("p2: " + g_form.getValue("admin_password_2"));
+    if (g_form.getValue("admin_password_1") != g_form.getValue("admin_password_2")) {
+        g_form.setValue("admin_password_1", "");
+        g_form.setValue("admin_password_2", "");
+        g_form.showErrorBox("admin_password_2", "Passwords do not match");
+        return false;
+    }
+
+    var p1 = g_form.getValue("admin_password_1");
+    if (p1.length < 8) {
+        g_form.showErrorBox("admin_password_2", "Passwords must have at least 8 characters");
+        return false;
+    }
+
+    if (p1.indexOf(g_form.getValue("admin_email")) > -1) {
+        g_form.showErrorBox("admin_password_2", "Password cannot contain username");
+        return false;
+    }
+
+    var re = /[0-9]/;
+    if (!re.test(p1)) {
+        g_form.showErrorBox("admin_password_2", "Password must contain at least one digit");
+        return false;
+    }
+
+    re = /[a-z]/;
+    if (!re.test(p1)) {
+        g_form.showErrorBox("admin_password_2", "Password must contain at least one lowercase letter");
+        return false;
+    }
+
+    re = /[A-Z]/;
+    if (!re.test(p1)) {
+        g_form.showErrorBox("admin_password_2", "Password must contain at least one uppercase letter");
+        return false;
+    }
+
+    return true;
+}
+]]></script>
+        <show_insert>true</show_insert>
+        <show_multiple_update>false</show_multiple_update>
+        <show_query>false</show_query>
+        <show_update>true</show_update>
+        <sys_class_name>sys_ui_action</sys_class_name>
+        <sys_created_by>app.developer</sys_created_by>
+        <sys_created_on>2017-03-21 15:10:27</sys_created_on>
+        <sys_domain>global</sys_domain>
+        <sys_domain_path>/</sys_domain_path>
+        <sys_id>749a9ef5c41332006d1eb3fa2927091f</sys_id>
+        <sys_mod_count>91</sys_mod_count>
+        <sys_name>Provision</sys_name>
+        <sys_overrides/>
+        <sys_package display_value="Okta Identity Cloud for ServiceNow" source="x_okta2_occ">2e691ab90f5bf60047b38ecce1050e30</sys_package>
+        <sys_policy>protected</sys_policy>
+        <sys_scope display_value="Okta Identity Cloud for ServiceNow">2e691ab90f5bf60047b38ecce1050e30</sys_scope>
+        <sys_update_name>sys_ui_action_749a9ef5c41332006d1eb3fa2927091f</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2017-10-05 14:31:53</sys_updated_on>
+        <table>x_okta2_occ_provider_setup</table>
+        <ui11_compatible>true</ui11_compatible>
+        <ui16_compatible>false</ui16_compatible>
+    </sys_ui_action>
+</record_update>

@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>x_okta2_occ.SSOOktaOrgApiHelper</api_name>
+        <client_callable>false</client_callable>
+        <description>Helper library for the Okta Tenant  API</description>
+        <name>SSOOktaOrgApiHelper</name>
+        <script><![CDATA[var SSOOktaOrgApiHelper = Class.create();
+SSOOktaOrgApiHelper.prototype = {
+    initialize: function() {
+        this.api = new x_okta2_occ.SSOOktaApiHelper();
+        this.settings = new x_okta2_occ.SSOGeneralSettingsHelper();
+        this.logger = new x_okta2_occ.SSOOutputLogHelper();
+        this.api_version = "v1";
+
+        this.result = this.api.result;
+
+    },
+
+    getEndpointBase: function() {
+        return this.settings.getProperty("tenant_api_url");
+    },
+
+    testToken: function() {
+        var func = "testToken";
+        this.logger.log(5, this.type, func, "Entering method");
+        try {
+            var headers = this.getOrgApiHeaders();
+            var endpoint = this.getEndpointBase() + "/api/" + this.api_version + "/users/me";
+            var body = "";
+            var response = this.api.sendRequest("GET", endpoint, headers, body);
+            if (!this.api.responseWasSuccessful(response)) {
+                var errorCode = response.getErrorCode();
+                var errorMessage = response.getErrorMessage();
+                this.logger.log(0, this.type, func, "Error in Okta Org API Test Request with error code: " + errorCode + " and Error Message: " + errorMessage);
+                if (this.result.oktaError) {
+                    this.logger.log(0, this.type, func, "Okta API Error Message: \n" + new global.JSON().encode(this.result.oktaError));
+                }
+                return false;
+            }
+            this.logger.log(5, this.type, func, "Response Body: " + response.getBody());
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error during Org Okta REST API Test Query");
+            return false;
+        }
+        this.logger.log(5, this.type, func, "It appears testToken was successful");
+        return true;
+    },
+
+    createTenant: function() {
+        var func = "createTenant";
+        this.logger.log(5, this.type, func, "Entering method");
+
+        try {
+            var headers = this.getOrgApiHeaders();
+            var endpoint = this.getEndpointBase() + "/api/" + this.api_version + "/orgs";
+            var body = this.generateTenantBody();
+            var response = this.api.sendRequest("POST", endpoint, headers, body);
+            if (!this.api.responseWasSuccessful(response)) {
+                var errorCode = response.getErrorCode();
+                var errorMessage = response.getErrorMessage();
+                this.logger.log(0, this.type, func, "Error in Okta Org API createTenant Request with error code: " + errorCode + " and Error Message: " + errorMessage);
+                if (this.result.oktaError) {
+                    this.logger.log(0, this.type, func, "Okta API Error Message: \n" + new global.JSON().encode(this.result.oktaError));
+                }
+                this.settings.setProperty("state", "Error");
+                gs.addErrorMessage(this.api.generateOktaErrorMessage(true, false));
+                this.logger.updateStatus(this.api.generateOktaErrorMessage(false, false));
+                return false;
+            }
+            this.handleOrgCreateResponse(response);
+            this.logger.log(5, this.type, func, "Response Body: " + response.getBody());
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error during Org Okta REST API createTenant Query");
+            return false;
+        }
+        this.settings.setProperty("state", "Complete");
+        this.logger.updateStatus(this.generateStateCompleteMessage());
+        //this.settings.setProperty("existing_customer", true);
+        this.logger.log(5, this.type, func, "It appears testToken was successful");
+        return true;
+    },
+
+    generateTenantBody: function() {
+        var func = "generateTenantBody";
+        this.logger.log(5, this.type, func, "Entering method");
+        try {
+            var body = {};
+            body.subdomain = this.settings.getProperty("okta_prefix");
+            body.name = this.settings.getProperty("company_name");
+            body.website = this.settings.getProperty("tenant_website");
+            body.edition = "DIRECTORY";
+            body.licensing = { "apps": [this.settings.getProperty("tenant_app_code")] }; 
+            body.admin = {};
+            body.admin.profile = {
+                "firstName": this.settings.getProperty("admin_first_name"),
+                "lastName": this.settings.getProperty("admin_last_name"),
+                "login": this.settings.getProperty("admin_email"),
+                "email": this.settings.getProperty("admin_email"),
+                "mobilePhone": ""
+            };
+            body.admin.credentials = {
+                "password": this.settings.getEncryptedProperty("admin_password_1"),
+                "recovery_question": {},
+            };
+
+            //TODO - Matt to get these to me, but these can be anything we want apparently
+            body.admin.credentials.recovery_question = {
+                "question": this.settings.getProperty("password_recovery_question"),
+                "answer": this.settings.getProperty("password_recovery_answer")
+            };
+            return body;
+
+
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error during Generation of Tenant Body");
+            return false;
+        }
+        this.logger.log(5, this.type, func, "It appears testToken was successful");
+        return true;
+    },
+
+
+    /*
+    Generates a string friendly message upon successful completion of the provisioning process
+    */
+    generateStateCompleteMessage: function() {
+        var func = "generateStateCompleteMessage";
+        this.logger.log(5, this.type, func, "Entering method");
+
+        try {
+
+            var msg = "Okta Tenant Generated";
+
+            if (!this.settings.getProperty("okta_instance")) {
+                this.logger.log(0, this.type, func, "Error generating status string as there is no Okta Instance generated");
+                return "";
+            }
+            msg += "\nOkta Instance: " + this.settings.getProperty("okta_instance");
+
+            if (!this.settings.getProperty("admin_email")) {
+                this.logger.log(0, this.type, func, "Error generating status string as there is no Administrator email");
+                return "";
+            }
+            msg += "\nAdmin username: " + this.settings.getProperty("admin_email");
+
+            return msg;
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error generating Error Message");
+        }
+    },
+
+
+
+
+
+
+
+    getOrgApiHeaders: function() {
+        var h = this.api.getDefaultRequestHeaders();
+        var key = this.settings.getProperty("tenant_api_token");
+        h.push({ "name": "Authorization", "value": "SSWS " + key });
+        return h;
+    },
+
+
+    handleOrgCreateResponse: function(
+        restResponse // (RESTResponseV2)
+    ) {
+        var func = "handleOrgCreateResponse";
+        this.logger.log(5, this.type, func, "Entering Function");
+        try {
+            var bodyString = restResponse.getBody();
+            this.logger.log(5, this.type, func, "bodyString: " + bodyString);
+            if (!bodyString) {
+                return;
+            }
+
+            var body = new global.JSON().decode(bodyString);
+            if (!body || typeof body === "string") {
+                return;
+            }
+
+            if (!body.id) {
+                return;
+            } else {
+                this.settings.setProperty("okta_tenant_id", body.id);
+            }
+
+            this.settings.setProperty("okta_api_token", body.token);
+            var subdomain = body.subdomain;
+            var oi = "https://" + subdomain + "." + this.settings.getProperty("tenant_domain");
+
+            this.settings.setProperty("okta_instance", oi);
+            return true;
+
+        } catch (e) {
+            this.logger.log(0, this.type, func, "ERROR in hanldeOrgCreateResponse");
+            return;
+        }
+
+
+    },
+
+    type: 'SSOOktaOrgApiHelper'
+};
+]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>app.developer</sys_created_by>
+        <sys_created_on>2017-03-22 02:47:09</sys_created_on>
+        <sys_id>249a9ef5c41332006d1eb3fa29270911</sys_id>
+        <sys_mod_count>55</sys_mod_count>
+        <sys_name>SSOOktaOrgApiHelper</sys_name>
+        <sys_package display_value="Okta Identity Cloud for ServiceNow" source="x_okta2_occ">2e691ab90f5bf60047b38ecce1050e30</sys_package>
+        <sys_policy>protected</sys_policy>
+        <sys_scope display_value="Okta Identity Cloud for ServiceNow">2e691ab90f5bf60047b38ecce1050e30</sys_scope>
+        <sys_update_name>sys_script_include_249a9ef5c41332006d1eb3fa29270911</sys_update_name>
+        <sys_updated_by>app.developer</sys_updated_by>
+        <sys_updated_on>2017-04-20 22:19:04</sys_updated_on>
+    </sys_script_include>
+</record_update>

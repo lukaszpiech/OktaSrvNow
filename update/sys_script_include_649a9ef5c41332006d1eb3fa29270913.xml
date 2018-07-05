@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>x_okta2_occ.SSOGeneralSettingsHelper</api_name>
+        <client_callable>false</client_callable>
+        <description/>
+        <name>SSOGeneralSettingsHelper</name>
+        <script><![CDATA[/*************************************************************************
+ *
+ * YANSA LABS - CONFIDENTIAL
+ * __________________
+ *
+ *  [2016] - [2017] Yansa Labs, LLC
+ *  All Rights Reserved.
+ *
+ * NOTICE:  All information contained herein is, and remains
+ * the property of Yansa Labs, LLC and its suppliers,
+ * if any.  The intellectual and technical concepts contained
+ * herein are proprietary to Yansa Labs, LLC
+ * and its suppliers and may be covered by U.S. and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law.
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Yansa Labs, LLC.
+ */
+
+var SSOGeneralSettingsHelper = Class.create();
+SSOGeneralSettingsHelper.prototype = {
+    initialize: function() {
+        //hard coded settings that are not meant for public adjustment
+        this.hcSettings = [];
+        this.hcSettings.property_prefix = "x_okta2_occ.cipher.";
+
+        /******************************************************
+            APP DEVELOPER'S NOTE - Changing an default system property in future app versions
+            -------------------------
+            If you need to change an OOB application system property, you could first 
+            run the value through the _cipherEncrypt() function to get that value.
+        
+            Then, set the value manually through the System Property Page and capture
+            in your application and/or update set
+
+            This is all done to help protect some of the internal API mechanisms that Okta
+            uses for this application.
+            ******************************************************/
+
+        //this.cipherSettingsFields = ["tenant_subdomain", "tenant_domain", "tenant_api_token", "tenant_website"];
+        //this.hcSettings.tenant_subdomain = "acme2";
+        this.hcSettings.tenant_subdomain = this.getCipherEncProperty("tenant_subdomain");
+
+        //this.hcSettings.tenant_domain = "oktapreview.com";
+        this.hcSettings.tenant_domain = this.getCipherEncProperty("tenant_domain");
+
+        this.hcSettings.tenant_api_url = "https://" + this.hcSettings.tenant_subdomain + "." + this.hcSettings.tenant_domain;
+
+        //this.hcSettings.tenant_api_token = "00J-fMc7xsuDW3FOX7RHGojg1FwQIC4Hxbv9KF0KbQ";
+        this.hcSettings.tenant_api_token = this.getCipherEncProperty("tenant_api_token");
+
+        //this.hcSettings.tenant_website = "https://www.servicenow.com";
+        this.hcSettings.tenant_website = this.getCipherEncProperty("tenant_website");
+
+        // two versions:   servicenow_app2   or    servicenow_ud
+        //this.hcSettings.tenant_app_code = this.getCipherEncProperty("tenant_app_code");
+
+
+    },
+
+    table: "x_okta2_occ_provider_setup",
+
+
+    getCipherEncProperty: function(
+        field // (string) name of the property to retrieve
+    ) {
+        return this._cipherDecryptMsg(gs.getProperty(this.hcSettings.property_prefix + field));
+    },
+
+
+
+
+
+    getProperty: function(
+        field // (string) name of the field to retrieve the value from
+    ) {
+        try {
+            if (this.hcSettings[field] == undefined || this.hcSettings[field] == null) {
+                var settings = this.getSettingsRecord();
+                return settings.getValue(field);
+            } else {
+                return this.hcSettings[field];
+            }
+        } catch (e) {
+            gs.error("SSOGeneralSettingsHelper:getProperty - exception: " + e);
+        }
+
+    },
+
+    // Get settings value that is encrypted as Password2 format
+    getEncryptedProperty: function(
+        field // (string) name of the field to retrieve the value from
+    ) {
+        try {
+            var settings = this.getSettingsRecord();
+            var decrypted = settings[field].getDecryptedValue();
+        } catch (e) {
+            gs.error("SSOGeneralSettingsHelper:getEncryptedProperty - exception: " + e);
+        }
+        return decrypted;
+    },
+
+
+    setProperty: function(
+        field, // (string) name of the field to set
+        value // (string) the value of the field
+    ) {
+        try {
+            var settings = this.getSettingsRecord();
+            settings.setValue(field, value);
+            settings.update();
+            return true;
+        } catch (e) {
+            gs.error("SSOGeneralSettingsHelper:setProperty - exception: " + e);
+        }
+    },
+
+    getSettingsRecord: function() {
+        try {
+            var gr = new GlideRecord(this.table);
+            gr.query();
+            gr.next();
+            return gr;
+        } catch (e) {
+            gs.error("SSOGeneralSettingsHelper:getSettingsRecord - exception: " + e);
+        }
+    },
+
+    generalSettingsFormNotices: function() {
+        var ret = {};
+        try {
+            ret.pluginEnabled = this.multiSsoPluginEnabled();
+            ret.pluginInstalled = this.multiSsoPluginInstalled();
+            var rec = this.getSettingsRecord();
+            ret.status = rec.status.toString();
+            ret.state = rec.state.toString();
+
+        } catch (e) {
+            gs.error("SSOGeneralSettingsHelper:generalSettingsFormNotices - exception: " + e);
+        }
+        return ret;
+    },
+
+    multiSsoPluginInstalled: function() {
+        try {
+            var gr = new GlideRecord("sso_properties");
+            gr.query();
+            if (gr.getRowCount() > 0) {
+                return true;
+            }
+            return false;
+        } catch (e) {
+            return false;
+        }
+
+    },
+
+    multiSsoPluginEnabled: function() {
+        try {
+            var res = gs.getProperty("glide.authenticate.multisso.enabled", false);
+            return res;
+        } catch (e) {
+            return false;
+        }
+    },
+
+    setDefaultSettingsValues: function() {
+        var gr = new GlideRecord("x_okta2_occ_provider_setup");
+        gr.query();
+        var newRecord = false;
+        try {
+            if (!gr.next()) {
+                newRecord = true;
+                gr.initialize();
+            }
+            gr.existing_customer = true;
+            gr.state = "New";
+            gr.advanced = false;
+            gr.okta_prefix = "";
+            gr.company_name = "";
+            gr.admin_first_name = "";
+            gr.admin_last_name = "";
+            gr.admin_email = "";
+            gr.admin_password_1 = "";
+            gr.admin_password_2 = "";
+            gr.password_recovery_question = "";
+            gr.password_recovery_answer = "";
+            gr.status = "";
+            gr.okta_metadata_url = "";
+            gr.okta_metadata = "";
+            gr.logging_level = "0";
+            gr.identity_provider = "";
+            gr.okta_tenant_id = "";
+            gr.okta_app_id = "";
+            gr.okta_api_token = "";
+            gr.okta_instance = "";
+            gr.tenant_app_code = "servicenow_ud";
+            //gr.tenant_app_code = this.getProperty("tenant_app_code");
+
+            if (newRecord) {
+                gr.insert();
+            } else {
+                gr.update();
+            }
+
+        } catch (e) {
+            gs.error("SSOGeneralSettingsHelper:generalSettingsFormNotices - exception: " + e);
+        }
+
+    },
+
+    _cipherEncrypt: function(
+        msg //(string) string to encrypt
+    ) {
+        try{
+            return gs.base64Encode(this._keyCipherRotate(msg));    
+        } catch(e) {
+            gs.error("SSOGeneralSettingsHelper:encrypting the cipher had an exception");
+        }
+        
+    },
+
+    _cipherDecryptMsg: function(
+        msg //(string) string to decrypt
+    ) {
+        try {
+            return this._keyCipherRotate(gs.base64Decode(msg), true);
+        } catch(e) {
+            gs.error("SSOGeneralSettingsHelper:decrypting the cipher had an exception");
+        }
+    },
+
+    // Non-linear unicode rotate
+    _keyCipherRotate: function(
+        text, //(string) string to cipher-ize
+        reverse //(optional - bool) - Reverse the rotation (eg. decrypt)
+    ) {
+        // Surrogate pair limit
+        var key = "OktaApplicationYansa";
+        var bound = 0x10000;
+
+        try {
+            // Create string from character codes
+            return String.fromCharCode.apply(null,
+                // Turn string to character codes
+                text.split('').map(function(v, i) {
+                    // Get rotation from key
+                    var rotation = key[i % key.length].charCodeAt();
+
+                    // Are we decrypting?
+                    if (reverse) rotation = -rotation;
+
+                    // Return current character code + rotation
+                    return (v.charCodeAt() + rotation + bound) % bound;
+                })
+            );
+        } catch (e) {
+            gs.error("SSOGeneralSettingsHelper: exception thrown while rotating the cipher key");
+        }
+    },
+
+
+    /*
+    Call this with a fix or background script to prep the app before publishing
+    */
+    clearForPublish: function() {
+        this.setDefaultSettingsValues();
+    },
+
+    type: 'SSOGeneralSettingsHelper'
+};
+]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>app.developer</sys_created_by>
+        <sys_created_on>2017-03-21 21:06:52</sys_created_on>
+        <sys_id>649a9ef5c41332006d1eb3fa29270913</sys_id>
+        <sys_mod_count>62</sys_mod_count>
+        <sys_name>SSOGeneralSettingsHelper</sys_name>
+        <sys_package display_value="Okta Identity Cloud for ServiceNow" source="x_okta2_occ">2e691ab90f5bf60047b38ecce1050e30</sys_package>
+        <sys_policy>protected</sys_policy>
+        <sys_scope display_value="Okta Identity Cloud for ServiceNow">2e691ab90f5bf60047b38ecce1050e30</sys_scope>
+        <sys_update_name>sys_script_include_649a9ef5c41332006d1eb3fa29270913</sys_update_name>
+        <sys_updated_by>app.developer</sys_updated_by>
+        <sys_updated_on>2017-04-20 22:17:53</sys_updated_on>
+    </sys_script_include>
+</record_update>

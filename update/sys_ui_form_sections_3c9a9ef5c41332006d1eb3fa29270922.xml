@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update>
+    <sys_ui_form_sections form_id="3c9a9ef5c41332006d1eb3fa29270922" sys_domain="global" table="x_okta2_occ_provider_setup" version="3">
+        <sys_ui_form_section action="INSERT_OR_UPDATE">
+            <position>0</position>
+            <sys_created_by>app.developer</sys_created_by>
+            <sys_created_on>2017-03-21 21:55:04</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>b89a9ef5c41332006d1eb3fa29270922</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_overrides/>
+            <sys_ui_form display_value="x_okta2_occ_provider_setup" name="x_okta2_occ_provider_setup" sys_domain="global" view="Default view">3c9a9ef5c41332006d1eb3fa29270922</sys_ui_form>
+            <sys_ui_section caption="NULL" display_value="" name="x_okta2_occ_provider_setup" sys_domain="global" view="Default view">dd9a9ef5c41332006d1eb3fa29270943</sys_ui_section>
+            <sys_updated_by>app.developer</sys_updated_by>
+            <sys_updated_on>2017-03-21 21:55:04</sys_updated_on>
+        </sys_ui_form_section>
+        <sys_ui_form action="INSERT_OR_UPDATE">
+            <name>x_okta2_occ_provider_setup</name>
+            <roles/>
+            <sys_class_name>sys_ui_form</sys_class_name>
+            <sys_created_by>app.developer</sys_created_by>
+            <sys_created_on>2017-03-21 21:55:04</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>3c9a9ef5c41332006d1eb3fa29270922</sys_id>
+            <sys_mod_count>24</sys_mod_count>
+            <sys_name>x_okta2_occ_provider_setup</sys_name>
+            <sys_overrides/>
+            <sys_package display_value="Okta Identity Cloud for ServiceNow" source="x_okta2_occ">2e691ab90f5bf60047b38ecce1050e30</sys_package>
+            <sys_policy/>
+            <sys_scope display_value="Okta Identity Cloud for ServiceNow">2e691ab90f5bf60047b38ecce1050e30</sys_scope>
+            <sys_update_name>sys_ui_form_sections_3c9a9ef5c41332006d1eb3fa29270922</sys_update_name>
+            <sys_updated_by>john@yansalabs.com</sys_updated_by>
+            <sys_updated_on>2017-10-09 16:08:38</sys_updated_on>
+            <sys_user/>
+            <view display_value="Default view" name="NULL">Default view</view>
+            <view_name/>
+        </sys_ui_form>
+    </sys_ui_form_sections>
+</record_update>

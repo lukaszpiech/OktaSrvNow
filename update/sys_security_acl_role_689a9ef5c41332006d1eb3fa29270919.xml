@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_security_acl_role">
+    <sys_security_acl_role action="INSERT_OR_UPDATE">
+        <sys_class_name>sys_security_acl_role</sys_class_name>
+        <sys_created_by>app.developer</sys_created_by>
+        <sys_created_on>2017-04-11 23:52:48</sys_created_on>
+        <sys_id>689a9ef5c41332006d1eb3fa29270919</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>x_okta2_occ_provider_setup.x_okta2_occ.Okta Identity Cloud - Admin</sys_name>
+        <sys_package display_value="Okta Identity Cloud for ServiceNow" source="x_okta2_occ">2e691ab90f5bf60047b38ecce1050e30</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Okta Identity Cloud for ServiceNow">2e691ab90f5bf60047b38ecce1050e30</sys_scope>
+        <sys_security_acl display_value="x_okta2_occ_provider_setup">609a9ef5c41332006d1eb3fa29270918</sys_security_acl>
+        <sys_update_name>sys_security_acl_role_689a9ef5c41332006d1eb3fa29270919</sys_update_name>
+        <sys_updated_by>app.developer</sys_updated_by>
+        <sys_updated_on>2017-04-11 23:52:48</sys_updated_on>
+        <sys_user_role display_value="x_okta2_occ.Okta Identity Cloud - Admin" name="x_okta2_occ.Okta Identity Cloud - Admin">959a9ef5c41332006d1eb3fa29270944</sys_user_role>
+        <transaction_id/>
+    </sys_security_acl_role>
+</record_update>

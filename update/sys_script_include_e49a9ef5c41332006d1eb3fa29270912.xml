@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>x_okta2_occ.SSOOktaAppApiHelper</api_name>
+        <client_callable>false</client_callable>
+        <description>Helper library for the Okta Application API</description>
+        <name>SSOOktaAppApiHelper</name>
+        <script><![CDATA[var SSOOktaAppApiHelper = Class.create();
+SSOOktaAppApiHelper.prototype = {
+    initialize: function() {
+        this.api = new x_okta2_occ.SSOOktaApiHelper();
+        this.settings = new x_okta2_occ.SSOGeneralSettingsHelper();
+        this.logger = new x_okta2_occ.SSOOutputLogHelper();
+        this.api_version = "v1";
+
+        this.result = this.api.result;
+    },
+
+    createApp: function() {
+        var func = "createApp";
+        this.logger.log(5, this.type, func, "Entering method");
+
+        try {
+            var headers = this.getAppApiHeaders();
+            this.logger.log(5, this.type, func, "Headers : " + new global.JSON().encode(headers));
+            var endpoint = this.api.getEndpointBase() + "/api/" + this.api_version + "/apps";
+            var body = this.generateAppCreationBody();
+            var response = this.api.sendRequest("POST", endpoint, headers, body);
+            if (!this.api.responseWasSuccessful(response)) {
+                var errorCode = response.getErrorCode();
+                var errorMessage = response.getErrorMessage();
+                this.logger.log(0, this.type, func, "Error in Okta App API createTenant Request with error code: " + errorCode + " and Error Message: " + errorMessage);
+                if (this.result.oktaError) {
+                    this.logger.log(0, this.type, func, "Okta API Error Message: \n" + new global.JSON().encode(this.result.oktaError));
+                }
+                this.settings.setProperty("state", "Error");
+                var emsg = this.api.generateOktaErrorMessage(true, false);
+                if( emsg ){
+                    // We will use the client side error message instead
+                    //gs.addErrorMessage(emsg);    
+                    gs.addErrorMessage("Provisioning Error: See details below.");
+                }
+                
+                this.logger.updateStatus(this.api.generateOktaErrorMessage(false, false));
+                return false;
+            }
+
+            this.handleAppCreateResponse(response);
+            this.logger.log(5, this.type, func, "Response Body: " + response.getBody());
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error during Org Okta REST API createApp Request");
+            return false;
+        }
+        this.settings.setProperty("state", "Complete");
+        //this.settings.setProperty("status", this.generateStateCompleteMessage());
+        return true;
+    },
+
+    generateAppCreationBody: function() {
+        var func = "generateAppCreationBody";
+        this.logger.log(5, this.type, func, "Entering method");
+        try {
+            var body = {};
+            var uri = gs.getProperty("glide.servlet.uri");
+            if (uri.slice(-1) == "/") {
+                uri = uri.slice(0, uri.length - 1);
+            }
+            body.name = this.settings.getProperty("tenant_app_code");
+            var nowdt = new GlideDateTime();
+			//body.label = "ServiceNow UD ("+nowdt.getNumericValue()+")";
+            body.status = "ACTIVE";
+            body.signOnMode = "SAML_2_0";
+            body.settings = {
+                "app": {
+                    //Attributes required in previous versions of the Okta ServiceNow application
+                    "loginURL": uri, 
+
+                    //Attributes required by the servicenow_ud application version
+                    "cpc_full_domain": uri,  
+                    "signOn": {
+                        "defaultRelayState": uri
+                    }
+                }
+            }
+            this.logger.log(4, this.type, func, new global.JSON().encode(body));
+            return body;
+
+
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error during Generation of App Creation Body");
+            return false;
+        }
+        return false;
+    },
+
+    handleAppCreateResponse: function(
+        restResponse // (RESTResponseV2)
+    ) {
+        var func = "handleAppCreateResponse";
+        this.logger.log(5, this.type, func, "Entering Function");
+        try {
+            var bodyString = restResponse.getBody();
+            this.logger.log(5, this.type, func, "bodyString: " + bodyString);
+            if (!bodyString) {
+                return;
+            }
+
+            var body = new global.JSON().decode(bodyString);
+            if (!body || typeof body === "string") {
+                return;
+            }
+
+            if (!body.id || !body._links || !body._links.metadata) {
+                return;
+            } else {
+                this.settings.setProperty("okta_metadata_url", body._links.metadata.href);
+                this.settings.setProperty("okta_app_id", body.id);
+            }
+
+
+
+            return true;
+
+        } catch (e) {
+            this.logger.log(0, this.type, func, "ERROR in " + func);
+            return;
+        }
+
+
+    },
+
+    getAppMetadata: function() {
+        var func = "getAppMetadata";
+        this.logger.log(5, this.type, func, "Entering method");
+
+        try {
+            var headers = this.getAppApiMetadataHeaders();
+            var endpoint = this.settings.getProperty("okta_metadata_url");
+            var body = "";
+            var response = this.api.sendRequest("GET", endpoint, headers, body);
+            if (!this.api.responseWasSuccessful(response)) {
+                var errorCode = response.getErrorCode();
+                var errorMessage = response.getErrorMessage();
+                this.logger.log(0, this.type, func, "Error in Okta SAML SSO Metadata Request with error code: " + errorCode + " and Error Message: " + errorMessage);
+                if (this.result.oktaError) {
+                    this.logger.log(0, this.type, func, "Okta API Error Message: \n" + new global.JSON().encode(this.result.oktaError));
+                }
+                this.settings.setProperty("state", "Error");
+                gs.addErrorMessage(this.api.generateOktaErrorMessage(true, false));
+                this.logger.updateStatus(this.api.generateOktaErrorMessage(false, false));
+                return false;
+            }
+
+            this.handleMetadataResponse(response);
+            this.logger.log(5, this.type, func, "Response Body: " + response.getBody());
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error during getAppMetadata Request");
+            return false;
+        }
+        this.settings.setProperty("state", "Complete");
+        return true;
+    },
+
+    getAppApiHeaders: function() {
+        var h = this.api.getDefaultRequestHeaders();
+        var key = this.settings.getEncryptedProperty("okta_api_token");
+        h.push({ "name": "Authorization", "value": "SSWS " + key });
+        return h;
+    },
+
+    getAppApiMetadataHeaders: function() {
+        var h = [];
+        h.push({ "name": "Accept", "value": "application/xml" });
+        h.push({ "name": "Content-Type", "value": "application/xml" });
+
+        var key = this.settings.getEncryptedProperty("okta_api_token");
+        h.push({ "name": "Authorization", "value": "SSWS " + key });
+        return h;
+    },
+
+    handleMetadataResponse: function(
+        restResponse // (RESTResponseV2)
+    ) {
+        var func = "handleMetadataResponse";
+        this.logger.log(5, this.type, func, "Entering Function");
+        try {
+            var bodyString = restResponse.getBody();
+            this.logger.log(5, this.type, func, "bodyString: " + bodyString);
+            if (!bodyString) {
+                return;
+            }
+
+            this.settings.setProperty("okta_metadata", bodyString);
+
+            return true;
+
+        } catch (e) {
+            this.logger.log(0, this.type, func, "ERROR in " + func);
+            return;
+        }
+
+
+    },
+
+    type: 'SSOOktaAppApiHelper'
+};
+]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>app.developer</sys_created_by>
+        <sys_created_on>2017-03-22 03:16:16</sys_created_on>
+        <sys_id>e49a9ef5c41332006d1eb3fa29270912</sys_id>
+        <sys_mod_count>37</sys_mod_count>
+        <sys_name>SSOOktaAppApiHelper</sys_name>
+        <sys_package display_value="Okta Identity Cloud for ServiceNow" source="x_okta2_occ">2e691ab90f5bf60047b38ecce1050e30</sys_package>
+        <sys_policy>protected</sys_policy>
+        <sys_scope display_value="Okta Identity Cloud for ServiceNow">2e691ab90f5bf60047b38ecce1050e30</sys_scope>
+        <sys_update_name>sys_script_include_e49a9ef5c41332006d1eb3fa29270912</sys_update_name>
+        <sys_updated_by>john@yansalabs.com</sys_updated_by>
+        <sys_updated_on>2017-07-18 01:10:34</sys_updated_on>
+    </sys_script_include>
+</record_update>

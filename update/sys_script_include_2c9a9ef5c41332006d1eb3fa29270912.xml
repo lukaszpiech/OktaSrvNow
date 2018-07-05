@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>x_okta2_occ.SSOMultiIdpHelper</api_name>
+        <client_callable>false</client_callable>
+        <description>Helper library that allows us to work with the Multiple Identity Provider records</description>
+        <name>SSOMultiIdpHelper</name>
+        <script><![CDATA[var SSOMultiIdpHelper = Class.create();
+SSOMultiIdpHelper.prototype = {
+    initialize: function() {
+        this.settings = new x_okta2_occ.SSOGeneralSettingsHelper();
+        this.logger = new x_okta2_occ.SSOOutputLogHelper();
+
+    },
+
+    createNewShellIdp: function(
+        name //(string) Name of the Idp Provider Record
+    ) {
+        var func = "createNewShellIdp";
+        this.logger.log(5, this.type, func, "Entering Function");
+
+        try {
+            var idp = this.idpExists(name);
+            if (idp) {
+                this.logger.log(5, this.type, func, "Idp Already Exists");
+                return "" + idp.sys_id;
+            }
+
+            idp = new GlideRecord("saml2_update1_properties");
+            idp.initialize();
+            idp.name = name;
+            idp.sso_script = "c9eabf531b121100227e5581be07131f";
+
+            if (!this.defaultIdPExists()) {
+				idp.setValue('default', true);
+            }
+
+            
+            idp.insert();
+            return "" + idp.sys_id;
+
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error creating new shell IDP");
+            return;
+        }
+
+
+    },
+
+    /*
+    Determines if a SAML 2 Update 1 SSO Provider Record exists with the same name
+    If there is not one, we return false
+    If there is a record, we return the record
+    */
+    idpExists: function(
+        name //(string) name of the Idp Record
+    ) {
+        var func = "idpExists";
+        this.logger.log(5, this.type, func, "Entering Function");
+
+        var idp = new GlideRecord("saml2_update1_properties");
+        idp.addQuery("name", name);
+        idp.query();
+        if (idp.next()) {
+            return idp;
+        }
+        return false;
+    },
+
+    pushMetadataToIdp: function(
+        idp, //(string) sys_id of the idp record
+        metadata //(xml string) metadata to import
+    ) {
+        var func = "pushMetadataToIdp";
+        this.logger.log(5, this.type, func, "Entering Function");
+
+        try {
+            this.logger.log(5, this.type, func, "idp: " + idp);
+            this.logger.log(5, this.type, func, "metadata: " + metadata);
+            var sga = new x_okta2_occ.ServerGlideAjaxHelper();
+            var msClientHelper = new global.MultiSSO_ClientHelper();
+            var params = [];
+            params.push({ "name": "sysparm_sys_id", "value": idp });
+            params.push({ "name": "sysparm_meta_xml", "value": metadata });
+
+            var res = sga.postGlideAjaxRequest(msClientHelper, "loadSAMLMetaFromXML", params);
+
+            if (!res) {
+                this.logger.log(0, this.type, func, "Unknown Error Importing Metadata into IdP");
+                return false;
+            }
+
+            if ( (res.error_msg && res.error_msg != "undefined") || !res.sys_id) {
+                this.logger.log(0, this.type, func, "Error Importing Metadata into IdP: " + res.error_msg);
+                return false;
+            }
+            return true;
+
+
+
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error importing meta data to IdP Record");
+            return;
+        }
+
+    },
+
+    getInstanceUrl: function() {
+        var func = "getInstanceUrl";
+        this.logger.log(5, this.type, func, "Entering Function");
+
+        try {
+            var uri = gs.getProperty("glide.servlet.uri");
+            if (uri.slice(-1) == "/") {
+                uri = uri.slice(0, uri.length - 1);
+            }
+            return uri;
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error getting instance url");
+            return;
+        }
+    },
+
+    defaultIdPExists: function() {
+        var func = "defaultIdPExists";
+        this.logger.log(5, this.type, func, "Entering Function");
+
+        try {
+            var idp = new GlideRecord("sso_properties");
+            idp.addQuery("default", true);
+            idp.query();
+            if (idp.getRowCount() > 0) {
+                return true;
+            }
+            return false;
+
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error determining if there is already a default IdP");
+            return;
+        }
+    },
+
+    renameIdp: function(
+        name, //(string) new name for the IdP record
+        idpId //(string) sys_id of the IdP record
+    ) {
+        var func = "renameIdp";
+        this.logger.log(5, this.type, func, "Entering Function");
+
+        try {
+            var idp = new GlideRecord("saml2_update1_properties");
+            idp.get(idpId);
+            if (!idp.isValidRecord()) {
+            	this.logger.log(5, this.type, func, "Invalid IdP: "+idpId);
+                return;
+            }
+            idp.name = name;
+            idp.update();
+            this.logger.log(5, this.type, func, "IdP Name updated to: "+idpId);
+            return true;
+
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error renaming IdP");
+            return;
+
+        }
+    },
+
+    setServiceNowInstanceInfo: function(
+        idpId //(string) sys_id of the IdP record
+    ) {
+        var func = "setServiceNowInstanceInfo";
+        this.logger.log(5, this.type, func, "Entering Function");
+
+        try {
+            var idp = new GlideRecord("saml2_update1_properties");
+            idp.get(idpId);
+            if (!idp.isValidRecord()) {
+                return;
+            }
+            idp.issuer = this.getInstanceUrl();
+            idp.service_url = idp.issuer + "/navpage.do";
+            idp.update();
+            return true;
+
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error renaming IdP");
+            return;
+
+        }
+    },
+	   
+	setActive: function(
+        idpId //(string) sys_id of the IdP record
+    ) {
+        var func = "setActive";
+        this.logger.log(5, this.type, func, "Entering Function");
+
+        try {
+            var idp = new GlideRecord("saml2_update1_properties");
+            idp.get(idpId);
+            if (!idp.isValidRecord()) {
+                return;
+            }
+            idp.active = true;
+            idp.update();
+            return true;
+
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error renaming IdP");
+            return;
+
+        }
+    },
+
+    type: 'SSOMultiIdpHelper'
+
+};
+]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>app.developer</sys_created_by>
+        <sys_created_on>2017-03-23 21:52:55</sys_created_on>
+        <sys_id>2c9a9ef5c41332006d1eb3fa29270912</sys_id>
+        <sys_mod_count>30</sys_mod_count>
+        <sys_name>SSOMultiIdpHelper</sys_name>
+        <sys_package display_value="Okta Identity Cloud for ServiceNow" source="x_okta2_occ">2e691ab90f5bf60047b38ecce1050e30</sys_package>
+        <sys_policy>protected</sys_policy>
+        <sys_scope display_value="Okta Identity Cloud for ServiceNow">2e691ab90f5bf60047b38ecce1050e30</sys_scope>
+        <sys_update_name>sys_script_include_2c9a9ef5c41332006d1eb3fa29270912</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2017-10-05 14:30:38</sys_updated_on>
+    </sys_script_include>
+</record_update>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update sys_domain="global" table="sys_app_module">
+    <sys_app_module action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <application display_value="Okta Identity Cloud for ServiceNow">75b8c6a1e4213200a51652d7e08658af</application>
+        <assessment/>
+        <content_page/>
+        <device_type/>
+        <filter/>
+        <hint>Installation and Configuration documentation</hint>
+        <homepage/>
+        <image/>
+        <link_type>DIRECT</link_type>
+        <map_page/>
+        <mobile_title>Contact Okta Support</mobile_title>
+        <mobile_view_name>Mobile</mobile_view_name>
+        <name/>
+        <order>53</order>
+        <override_menu_roles>false</override_menu_roles>
+        <query>https://support.okta.com/help/Documentation/Knowledge_Article/24063857-ServiceNow-Deployment-Guide</query>
+        <report/>
+        <roles/>
+        <sys_class_name>sys_app_module</sys_class_name>
+        <sys_created_by>app.developer</sys_created_by>
+        <sys_created_on>2017-04-03 16:14:36</sys_created_on>
+        <sys_domain>global</sys_domain>
+        <sys_domain_path>/</sys_domain_path>
+        <sys_id>914eeddf0ff9720047b38ecce1050fec</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Documentation</sys_name>
+        <sys_overrides/>
+        <sys_package display_value="Okta Identity Cloud for ServiceNow" source="x_okta2_occ">2e691ab90f5bf60047b38ecce1050e30</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Okta Identity Cloud for ServiceNow">2e691ab90f5bf60047b38ecce1050e30</sys_scope>
+        <sys_update_name>sys_app_module_914eeddf0ff9720047b38ecce1050fec</sys_update_name>
+        <sys_updated_by>app.developer</sys_updated_by>
+        <sys_updated_on>2017-04-03 16:14:36</sys_updated_on>
+        <timeline_page/>
+        <title>Documentation</title>
+        <uncancelable>false</uncancelable>
+        <view_name/>
+        <window_name>_blank</window_name>
+    </sys_app_module>
+</record_update>

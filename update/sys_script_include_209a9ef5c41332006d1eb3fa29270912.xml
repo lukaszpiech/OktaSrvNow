@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>x_okta2_occ.SSOMasterOktaApiHelper</api_name>
+        <client_callable>false</client_callable>
+        <description/>
+        <name>SSOMasterOktaApiHelper</name>
+        <script><![CDATA[var SSOMasterOktaApiHelper = Class.create();
+SSOMasterOktaApiHelper.prototype = Object.extendsObject(x_okta2_occ.SSOOktaApiHelper, {
+    initialize: function() {
+        x_okta2_occ.SSOOktaApiHelper.prototype.initialize();
+        this.settings = x_okta2_occ.SSOOktaApiHelper.prototype.settings;
+        this.logger = x_okta2_occ.SSOOktaApiHelper.prototype.logger;
+        this.api_version = "v1";
+
+        this.result = x_okta2_occ.SSOOktaApiHelper.prototype.result;
+
+    },
+
+    getEndpointBase: function() {
+        return this.settings.getProperty("tenant_api_url");
+    },
+
+    testToken: function() {
+        try {
+            var func = "testToken";
+            this.logger.log(5, this.type, func, "Entering method");
+            var headers = this.getMasterApiHeaders();
+            var endpoint = this.getEndpointBase() + "/api/" + this.api_version + "/users/me";
+            var body = "";
+            var response = x_okta2_occ.SSOOktaApiHelper.prototype.sendRequest("GET", endpoint, headers, body);
+            if (!this.responseWasSuccessful(response)) {
+                var errorCode = response.getErrorCode();
+                var errorMessage = response.getErrorMessage();
+                this.logger.log(0, this.type, func, "Error in Okta Master API Test Request with error code: " + errorCode + " and Error Message: " + errorMessage);
+                if (this.result.oktaError) {
+                    this.logger.log(0, this.type, func, "Okta API Error Message: \n" + new global.JSON().encode(this.result.oktaError));
+                }
+                return false;
+            }
+            this.logger.log(5, this.type, func, "Response Body: " + response.getBody());
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error during Master Okta REST API Test Query");
+            return false;
+        }
+        this.logger.log(5, this.type, func, "It appears testToken was successful");
+        return true;
+    },
+
+    createTenant: function() {
+        try {
+            var func = "createTenant";
+            this.logger.log(5, this.type, func, "Entering method");
+            var headers = this.getMasterApiHeaders();
+            var endpoint = this.getEndpointBase() + "/api/" + this.api_version + "/orgs";
+            var body = this.generateTenantBody();
+            var response = x_okta2_occ.SSOOktaApiHelper.prototype.sendRequest("GET", endpoint, headers, body);
+            if (!this.responseWasSuccessful(response)) {
+                var errorCode = response.getErrorCode();
+                var errorMessage = response.getErrorMessage();
+                this.logger.log(0, this.type, func, "Error in Okta Master API Test Request with error code: " + errorCode + " and Error Message: " + errorMessage);
+                if (this.result.oktaError) {
+                    this.logger.log(0, this.type, func, "Okta API Error Message: \n" + new global.JSON().encode(this.result.oktaError));
+                }
+                return false;
+            }
+            this.logger.log(5, this.type, func, "Response Body: " + response.getBody());
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error during Master Okta REST API Test Query");
+            return false;
+        }
+        this.logger.log(5, this.type, func, "It appears testToken was successful");
+        return true;
+    },
+
+    generateTenantBody: function() {
+        try {
+            var func = "generateTenantBody";
+            this.logger.log(5, this.type, func, "Entering method");
+            var body = {};
+            body.subdomain = this.settings.getProperty("okta_prefix");
+            body.name = this.settings.getProperty("company_name");
+            body.website = this.settings.getProperty("tenant_website");
+            body.edition = "DIRECTORY"; //TODO - Verify this
+            body.licensing = { "apps": ["servicenow"] }; //TODO - Verify this
+            body.admin = {};
+            body.admin.profile = {
+                "firstName": this.settings.getProperty("admin_first_name"),
+                "lastName": this.settings.getProperty("admin_last_name"),
+                "login": this.settings.getProperty("admin_username"),
+                "email": this.settings.getProperty("admin_email"),
+                "mobilePhone": "" //TODO - verify this
+            };
+            body.admin.credentials = {
+                "password": this.getEncryptedProperty("admin_password_1"),
+                "recovery_question": {},
+            }
+
+            //TODO - get these options and get them on the form
+            body.admin.credentials.recovery_question = {
+                "question": "",
+                "answer": ""
+            }
+            return new global.JSON().encode(body);
+
+
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error during Generation of Tenant Body");
+            return false;
+        }
+        this.logger.log(5, this.type, func, "It appears testToken was successful");
+        return true;
+    },
+
+
+    getMasterApiHeaders: function() {
+        var h = x_okta2_occ.SSOOktaApiHelper.prototype.getDefaultRequestHeaders();
+        try {
+            var key = this.settings.getProperty("tenant_api_token");
+            h.push({ "name": "Authorization", "value": "SSWS " + key });
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error getting Master API headers");
+        }
+        return h;
+    },
+
+    __retrieveEvents: function(
+        after, // (string) - the Okta "After" string from the header indicating paging
+        writeData // (bool) write results to the Event Watch System Log Event table
+    ) {
+        var func = "retrieveEvents";
+        this.logger.log(5, this.type, func, "Entering Function with after: " + after);
+        try {
+            var headers = this.getSystemLogHeaders();
+            var body = this.getSystemLogBody();
+            var endpoint = this.generateEndpointUri(after);
+            var response = this.api.sendRequest("GET", endpoint, headers, body);
+            if (!this.responseWasSuccessful(response)) {
+                var errorCode = response.getErrorCode();
+                var errorMessage = response.getErrorMessage();
+                this.logger.log(0, this.type, func, "Error in Okta System Log Request with error code: " + errorCode + " and Error Message: " + errorMessage);
+                return false;
+            }
+
+            var slResponse = this.handleResponse(response, writeData);
+            if (slResponse.nextPage) {
+                this.logger.log(5, this.type, func, "There are more: " + slResponse.nextPage);
+                this.retrieveEvents(slResponse.nextPage, writeData);
+            }
+
+            this.logger.log(5, this.type, func, "Response Body: " + response.getBody());
+
+
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error during Okta REST API System Log Query");
+            return false;
+        }
+        return true;
+
+    },
+
+    __handleResponse: function(
+        restResponse, // (RESTResponseV2) 
+        writeData // (bool) write result to a new System Log Event record
+    ) {
+        var func = "handleResponse";
+        this.logger.log(5, this.type, func, "Entering Function");
+        var slr = {};
+
+        slr = this.buildSlResponseObject(restResponse);
+        this.logger.log(5, this.type, func, "headers: " + new global.JSON().encode(slr.headers));
+        if (writeData) {
+            this.writeResponseToSystemLogRecord(slr);
+        }
+
+        return slr;
+    },
+
+    type: 'SSOMasterOktaApiHelper'
+});
+]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>app.developer</sys_created_by>
+        <sys_created_on>2017-03-21 21:21:25</sys_created_on>
+        <sys_id>209a9ef5c41332006d1eb3fa29270912</sys_id>
+        <sys_mod_count>31</sys_mod_count>
+        <sys_name>SSOMasterOktaApiHelper</sys_name>
+        <sys_package display_value="Okta Identity Cloud for ServiceNow" source="x_okta2_occ">2e691ab90f5bf60047b38ecce1050e30</sys_package>
+        <sys_policy>protected</sys_policy>
+        <sys_scope display_value="Okta Identity Cloud for ServiceNow">2e691ab90f5bf60047b38ecce1050e30</sys_scope>
+        <sys_update_name>sys_script_include_209a9ef5c41332006d1eb3fa29270912</sys_update_name>
+        <sys_updated_by>app.developer</sys_updated_by>
+        <sys_updated_on>2017-04-03 16:56:45</sys_updated_on>
+    </sys_script_include>
+</record_update>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update>
+    <sys_choice action="INSERT_OR_UPDATE" field="logging_level" table="x_okta2_occ_provider_setup" version="3">
+        <sys_choice action="INSERT_OR_UPDATE">
+            <dependent_value/>
+            <element>logging_level</element>
+            <hint/>
+            <inactive>false</inactive>
+            <label>Low</label>
+            <language>en</language>
+            <name>x_okta2_occ_provider_setup</name>
+            <sequence>0</sequence>
+            <sys_created_by>app.developer</sys_created_by>
+            <sys_created_on>2017-03-21 21:55:08</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>eb8a5ef5c41332006d1eb3fa292709ef</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_updated_by>app.developer</sys_updated_by>
+            <sys_updated_on>2017-03-21 21:55:08</sys_updated_on>
+            <value>0</value>
+        </sys_choice>
+        <sys_choice action="INSERT_OR_UPDATE">
+            <dependent_value/>
+            <element>logging_level</element>
+            <hint/>
+            <inactive>false</inactive>
+            <label>Medium</label>
+            <language>en</language>
+            <name>x_okta2_occ_provider_setup</name>
+            <sequence>1</sequence>
+            <sys_created_by>app.developer</sys_created_by>
+            <sys_created_on>2017-03-21 21:55:08</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>6f8a5ef5c41332006d1eb3fa292709ef</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_updated_by>app.developer</sys_updated_by>
+            <sys_updated_on>2017-03-21 21:55:08</sys_updated_on>
+            <value>3</value>
+        </sys_choice>
+        <sys_choice action="INSERT_OR_UPDATE">
+            <dependent_value/>
+            <element>logging_level</element>
+            <hint/>
+            <inactive>false</inactive>
+            <label>High</label>
+            <language>en</language>
+            <name>x_okta2_occ_provider_setup</name>
+            <sequence>2</sequence>
+            <sys_created_by>app.developer</sys_created_by>
+            <sys_created_on>2017-03-21 21:55:09</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>ff8a5ef5c41332006d1eb3fa292709ef</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_updated_by>app.developer</sys_updated_by>
+            <sys_updated_on>2017-03-21 21:55:09</sys_updated_on>
+            <value>5</value>
+        </sys_choice>
+        <sys_choice_set action="INSERT_OR_UPDATE">
+            <element>logging_level</element>
+            <name>x_okta2_occ_provider_setup</name>
+            <sys_class_name>sys_choice_set</sys_class_name>
+            <sys_created_by>app.developer</sys_created_by>
+            <sys_created_on>2017-03-21 21:55:08</sys_created_on>
+            <sys_id>8e3a3470db8313007f3873278c961952</sys_id>
+            <sys_mod_count>23</sys_mod_count>
+            <sys_name>logging_level</sys_name>
+            <sys_package display_value="Okta Identity Cloud for ServiceNow" source="x_okta2_occ">2e691ab90f5bf60047b38ecce1050e30</sys_package>
+            <sys_policy/>
+            <sys_scope display_value="Okta Identity Cloud for ServiceNow">2e691ab90f5bf60047b38ecce1050e30</sys_scope>
+            <sys_update_name>sys_choice_x_okta2_occ_provider_setup_logging_level</sys_update_name>
+            <sys_updated_by>john@yansalabs.com</sys_updated_by>
+            <sys_updated_on>2017-10-09 16:08:39</sys_updated_on>
+        </sys_choice_set>
+    </sys_choice>
+</record_update>

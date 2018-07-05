@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_ui_policy_action">
+    <sys_ui_policy_action action="INSERT_OR_UPDATE">
+        <disabled>ignore</disabled>
+        <field>admin_password_2</field>
+        <mandatory>ignore</mandatory>
+        <sys_class_name>sys_ui_policy_action</sys_class_name>
+        <sys_created_by>app.developer</sys_created_by>
+        <sys_created_on>2017-03-21 15:01:56</sys_created_on>
+        <sys_id>0d9a9ef5c41332006d1eb3fa2927092b</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>admin_password_2</sys_name>
+        <sys_package display_value="Okta Identity Cloud for ServiceNow" source="x_okta2_occ">2e691ab90f5bf60047b38ecce1050e30</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Okta Identity Cloud for ServiceNow">2e691ab90f5bf60047b38ecce1050e30</sys_scope>
+        <sys_update_name>sys_ui_policy_action_0d9a9ef5c41332006d1eb3fa2927092b</sys_update_name>
+        <sys_updated_by>app.developer</sys_updated_by>
+        <sys_updated_on>2017-03-21 15:01:56</sys_updated_on>
+        <table>x_okta2_occ_provider_setup</table>
+        <ui_policy display_value="New Okta Customer">099a9ef5c41332006d1eb3fa2927093e</ui_policy>
+        <visible>true</visible>
+    </sys_ui_policy_action>
+</record_update>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update sys_domain="global" table="sys_app_application">
+    <sys_app_application action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <category display_value="Custom Applications">e0355b31ef303000a61d5a3615c0fb78</category>
+        <description/>
+        <device_type>browser</device_type>
+        <hint>Configure Okta Identity Cloud for ServiceNow</hint>
+        <name>x_okta2_occ_okta single sign-on</name>
+        <order>100</order>
+        <roles>x_okta2_occ.Okta Identity Cloud - Admin,x_okta2_sso.Okta Identity Cloud - Admin</roles>
+        <sys_class_name>sys_app_application</sys_class_name>
+        <sys_created_by>app.developer</sys_created_by>
+        <sys_created_on>2017-03-16 21:25:05</sys_created_on>
+        <sys_domain>global</sys_domain>
+        <sys_domain_path>/</sys_domain_path>
+        <sys_id>75b8c6a1e4213200a51652d7e08658af</sys_id>
+        <sys_mod_count>10</sys_mod_count>
+        <sys_name>Okta Identity Cloud for ServiceNow</sys_name>
+        <sys_overrides/>
+        <sys_package display_value="Okta Identity Cloud for ServiceNow" source="x_okta2_occ">2e691ab90f5bf60047b38ecce1050e30</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Okta Identity Cloud for ServiceNow">2e691ab90f5bf60047b38ecce1050e30</sys_scope>
+        <sys_update_name>sys_app_application_75b8c6a1e4213200a51652d7e08658af</sys_update_name>
+        <sys_updated_by>john@yansalabs.com</sys_updated_by>
+        <sys_updated_on>2017-07-18 01:09:20</sys_updated_on>
+        <title>Okta Identity Cloud for ServiceNow</title>
+        <view_name/>
+    </sys_app_application>
+</record_update>

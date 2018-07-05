@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_ui_policy_action">
+    <sys_ui_policy_action action="INSERT_OR_UPDATE">
+        <disabled>true</disabled>
+        <field>admin_last_name</field>
+        <mandatory>ignore</mandatory>
+        <sys_class_name>sys_ui_policy_action</sys_class_name>
+        <sys_created_by>app.developer</sys_created_by>
+        <sys_created_on>2017-04-04 01:32:14</sys_created_on>
+        <sys_id>cd9a9ef5c41332006d1eb3fa29270928</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>admin_last_name</sys_name>
+        <sys_package display_value="Okta Identity Cloud for ServiceNow" source="x_okta2_occ">2e691ab90f5bf60047b38ecce1050e30</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Okta Identity Cloud for ServiceNow">2e691ab90f5bf60047b38ecce1050e30</sys_scope>
+        <sys_update_name>sys_ui_policy_action_cd9a9ef5c41332006d1eb3fa29270928</sys_update_name>
+        <sys_updated_by>app.developer</sys_updated_by>
+        <sys_updated_on>2017-04-04 01:32:14</sys_updated_on>
+        <table>x_okta2_occ_provider_setup</table>
+        <ui_policy display_value="Lock down fields when state is Complete">fc9a9ef5c41332006d1eb3fa29270924</ui_policy>
+        <visible>ignore</visible>
+    </sys_ui_policy_action>
+</record_update>

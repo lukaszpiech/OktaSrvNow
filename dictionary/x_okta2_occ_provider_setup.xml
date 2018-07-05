@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<database>
+    <element attributes="update_synch=true" label="Provider Setup" max_length="40" name="x_okta2_occ_provider_setup" type="collection">
+        <element attributes="edge_encryption_enabled=true" label="Administrator Email" max_length="100" name="admin_email" type="string"/>
+        <element label="Administrator First Name" max_length="40" name="admin_first_name" type="string"/>
+        <element label="Administrator Last Name" max_length="40" name="admin_last_name" type="string"/>
+        <element label="Desired Password" max_length="255" name="admin_password_1" type="password2"/>
+        <element label="Confirm Password" max_length="255" name="admin_password_2" type="password2"/>
+        <element label="Admin Username" max_length="100" name="admin_username" type="string"/>
+        <element label="Advanced" max_length="40" name="advanced" type="boolean"/>
+        <element label="Company Name (Name)" max_length="40" name="company_name" type="string"/>
+        <element default="true" label="Existing Customer" max_length="40" name="existing_customer" type="boolean"/>
+        <element label="Identity Provider" max_length="32" name="identity_provider" read_only="true" reference="saml2_update1_properties" type="reference"/>
+        <element attributes="edge_encryption_enabled=true" choice="3" default="0" label="Logging Level" max_length="40" name="logging_level" type="string">
+            <choice>
+                <element label="Low" sequence="0" value="0"/>
+                <element label="Medium" sequence="1" value="3"/>
+                <element label="High" sequence="2" value="5"/>
+            </choice>
+        </element>
+        <element label="Okta API Token" max_length="255" name="okta_api_token" type="password2"/>
+        <element attributes="edge_encryption_enabled=true" label="Okta App ID" max_length="40" name="okta_app_id" read_only="true" type="string"/>
+        <element display="true" label="Okta Instance" max_length="1024" name="okta_instance" type="url"/>
+        <element attributes="edge_encryption_enabled=true" label="Okta Metadata" max_length="4000" name="okta_metadata" read_only="true" type="xml"/>
+        <element attributes="edge_encryption_enabled=true" label="Okta Metadata URL" max_length="400" name="okta_metadata_url" read_only="true" type="string"/>
+        <element label="Okta Prefix (Subdomain)" max_length="40" name="okta_prefix" type="string"/>
+        <element attributes="edge_encryption_enabled=true" label="Okta Tenant ID" max_length="100" name="okta_tenant_id" read_only="true" type="string"/>
+        <element attributes="edge_encryption_enabled=true" label="Password Recovery Answer" max_length="100" name="password_recovery_answer" type="string"/>
+        <element attributes="edge_encryption_enabled=true" choice="3" default="What is the food you least liked as a child?" label="Password Recovery Question" max_length="100" name="password_recovery_question" type="string">
+            <choice>
+                <element label="What is the food you least liked as a child?" sequence="0" value="What is the food you least liked as a child?"/>
+                <element label="What is the name of your first stuffed animal?" sequence="1" value="What is the name of your first stuffed animal?"/>
+                <element label="What did you earn your first medal or award for?" sequence="2" value="What did you earn your first medal or award for?"/>
+                <element label="What is your favorite security question?" sequence="3" value="What is your favorite security question?"/>
+                <element label="What is the toy/stuffed animal you liked the most as a kid?" sequence="4" value="What is the toy/stuffed animal you liked the most as a kid?"/>
+                <element label="What was the first computer game you played?" sequence="5" value="What was the first computer game you played?"/>
+                <element label="What is your favorite movie quote?" sequence="6" value="What is your favorite movie quote?"/>
+                <element label="What was the mascot of the first sports team you played on?" sequence="7" value="What was the mascot of the first sports team you played on?"/>
+                <element label="What music album or song did you first purchase?" sequence="8" value="What music album or song did you first purchase?"/>
+                <element label="What is your favorite piece of art?" sequence="9" value="What is your favorite piece of art?"/>
+                <element label="What was your grandmother's favorite dessert?" sequence="10" value="What was your grandmother's favorite dessert?"/>
+                <element label="What was the first thing you learned to cook?" sequence="11" value="What was the first thing you learned to cook?"/>
+                <element label="What was your dream job as a child?" sequence="12" value="What was your dream job as a child?"/>
+                <element label="Where did you meet your spouse/significant other?" sequence="13" value="Where did you meet your spouse/significant other?"/>
+                <element label="Where did you go for your favorite vacation?" sequence="14" value="Where did you go for your favorite vacation?"/>
+                <element label="Where were you on New Year's Eve in the year 2000?" sequence="15" value="Where were you on New Year's Eve in the year 2000?"/>
+                <element label="Who is your favorite speaker/orator?" sequence="16" value="Who is your favorite speaker/orator?"/>
+                <element label="Who is your favorite book/movie character?" sequence="17" value="Who is your favorite book/movie character?"/>
+                <element label="Who is your favorite sports player?" sequence="18" value="Who is your favorite sports player?"/>
+            </choice>
+        </element>
+        <element choice="1" default="Processing" label="State" max_length="40" name="state" read_only="true" type="choice">
+            <choice>
+                <element label="New" sequence="0" value="New"/>
+                <element label="Complete" sequence="1" value="Complete"/>
+                <element label="Error" sequence="2" value="Error"/>
+                <element label="Processing" sequence="3" value="Processing"/>
+            </choice>
+        </element>
+        <element attributes="edge_encryption_enabled=true" label="Status" max_length="4000" name="status" read_only="true" type="string"/>
+        <element attributes="edge_encryption_enabled=true" default="servicenow_ud" label="Tenant App Code" max_length="40" name="tenant_app_code" type="string"/>
+        <index name="index">
+            <element name="identity_provider"/>
+        </index>
+    </element>
+</database>

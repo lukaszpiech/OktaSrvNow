@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update>
+    <sys_documentation element="admin_username" label="Admin Username" language="en" table="x_okta2_occ_provider_setup">
+        <sys_documentation action="INSERT_OR_UPDATE">
+            <element>admin_username</element>
+            <help/>
+            <hint/>
+            <label>Admin Username</label>
+            <language>en</language>
+            <name>x_okta2_occ_provider_setup</name>
+            <plural>Admin Usernames</plural>
+            <sys_class_name>sys_documentation</sys_class_name>
+            <sys_created_by>app.developer</sys_created_by>
+            <sys_created_on>2017-03-21 13:42:47</sys_created_on>
+            <sys_id>c89a9ef5c41332006d1eb3fa29270900</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_name>Admin Username</sys_name>
+            <sys_package display_value="Okta Identity Cloud for ServiceNow" source="x_okta2_occ">2e691ab90f5bf60047b38ecce1050e30</sys_package>
+            <sys_policy/>
+            <sys_scope display_value="Okta Identity Cloud for ServiceNow">2e691ab90f5bf60047b38ecce1050e30</sys_scope>
+            <sys_update_name>sys_documentation_x_okta2_occ_provider_setup_admin_username_en</sys_update_name>
+            <sys_updated_by>app.developer</sys_updated_by>
+            <sys_updated_on>2017-03-21 13:42:47</sys_updated_on>
+            <url/>
+            <url_target/>
+        </sys_documentation>
+    </sys_documentation>
+</record_update>

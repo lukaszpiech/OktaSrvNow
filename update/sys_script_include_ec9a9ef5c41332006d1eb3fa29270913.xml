@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>x_okta2_occ.SSOOutputLogHelper</api_name>
+        <client_callable>false</client_callable>
+        <description/>
+        <name>SSOOutputLogHelper</name>
+        <script><![CDATA[var SSOOutputLogHelper = Class.create();
+SSOOutputLogHelper.prototype = {
+	initialize: function() {
+		this.logLevel = this.settings.getProperty("logging_level");
+	},
+	
+	settings: new x_okta2_occ.SSOGeneralSettingsHelper(),
+	
+	
+	entry: 0,
+	padding: "0000000",
+	
+	log: function(
+	level, //(int) 0-5 logging level. O is minimal, 5 verbose
+	library, //(string) name of the library/rule/etc where the function/code resides
+	func, //(string)name of the function we are executing
+	msg //(string) the message to log
+	) {
+		try {
+			if (parseInt(level) <= parseInt(this.logLevel)) {
+				var entryNumPadded = this.padding.substring(0, this.padding.length - ("" + this.entry).length) + this.entry;
+				var fullMsg = "[" + entryNumPadded + "] - {" + library + " : " + func + "} - " + msg;
+				gs.info(fullMsg);
+				this.updateStatus(fullMsg);
+				this.entry++;
+			}
+		} catch (e) {
+			gs.error("SystemLogHelper Exception: " + e);
+			
+		}
+	},
+
+	updateStatus: function(
+		message //(string) message to append to the status property
+	){
+		gs.info("ENTERING UPDATE STATUS");
+		var func = "udpateStatus";
+		try{
+			var cmsg = this.settings.getProperty("status");
+			if( !cmsg ) cmsg = "";
+			this.settings.setProperty("status", cmsg+"\n"+message);
+		} catch(e){
+			gs.error(this.type+":"+func+" EXCEPTION THROWN: \n"+e);
+		}
+	},
+	
+	reportException: function(
+	library, //(string) name of the library/rule/etc where the function/code resides
+	func, //(string)name of the function we are executing
+	e, //(Exception Object)
+	msg //(optional string) Optional Message
+	) {
+		var vDebug = "";
+		for (var prop in e) {
+			if ((typeof e[prop]) === "string" || (typeof e[prop]) === "number") {
+				vDebug += "[" + prop + "]: " + e[prop] + "\n";
+			}
+		}
+		if( msg ){
+			this.log(0, library, func, "EXCEPTION THROWN in (" + func + "): \n" + msg + "\n"+vDebug);
+		} else {
+			this.log(0, library, func, "EXCEPTION THROWN in (" + func + "): \n" + vDebug);
+		}
+	},
+	
+	type: 'SSOOutputLogHelper'
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>app.developer</sys_created_by>
+        <sys_created_on>2017-03-21 21:11:37</sys_created_on>
+        <sys_id>ec9a9ef5c41332006d1eb3fa29270913</sys_id>
+        <sys_mod_count>10</sys_mod_count>
+        <sys_name>SSOOutputLogHelper</sys_name>
+        <sys_package display_value="Okta Identity Cloud for ServiceNow" source="x_okta2_occ">2e691ab90f5bf60047b38ecce1050e30</sys_package>
+        <sys_policy>protected</sys_policy>
+        <sys_scope display_value="Okta Identity Cloud for ServiceNow">2e691ab90f5bf60047b38ecce1050e30</sys_scope>
+        <sys_update_name>sys_script_include_ec9a9ef5c41332006d1eb3fa29270913</sys_update_name>
+        <sys_updated_by>app.developer</sys_updated_by>
+        <sys_updated_on>2017-04-11 22:36:44</sys_updated_on>
+    </sys_script_include>
+</record_update>

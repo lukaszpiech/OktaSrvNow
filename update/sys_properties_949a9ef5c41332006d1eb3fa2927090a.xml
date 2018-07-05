@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_properties">
+    <sys_properties action="INSERT_OR_UPDATE">
+        <choices/>
+        <description>Application Code for Okta</description>
+        <ignore_cache>true</ignore_cache>
+        <is_private>false</is_private>
+        <name>x_okta2_occ.cipher.tenant_app_code</name>
+        <read_roles>admin,x_okta2_occ.Okta Identity Cloud - Admin</read_roles>
+        <suffix>cipher.tenant_app_code</suffix>
+        <sys_class_name>sys_properties</sys_class_name>
+        <sys_created_by>app.developer</sys_created_by>
+        <sys_created_on>2017-03-31 23:47:44</sys_created_on>
+        <sys_id>949a9ef5c41332006d1eb3fa2927090a</sys_id>
+        <sys_mod_count>5</sys_mod_count>
+        <sys_name>x_okta2_occ.cipher.tenant_app_code</sys_name>
+        <sys_package display_value="Okta Identity Cloud for ServiceNow" source="x_okta2_occ">2e691ab90f5bf60047b38ecce1050e30</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Okta Identity Cloud for ServiceNow">2e691ab90f5bf60047b38ecce1050e30</sys_scope>
+        <sys_update_name>sys_properties_949a9ef5c41332006d1eb3fa2927090a</sys_update_name>
+        <sys_updated_by>app.developer</sys_updated_by>
+        <sys_updated_on>2017-04-11 19:32:08</sys_updated_on>
+        <type>password2</type>
+        <value>{{dflt-gpaes}}WkXtGiQ4qfONWOSap8+F5JyaXcOZLb+WBQRVm4D1tpJ38scl8w84enFviYBMYxMi</value>
+        <write_roles>admin,x_okta2_occ.Okta Identity Cloud - Admin</write_roles>
+    </sys_properties>
+    <sys_translated_text action="delete_multiple" query="documentkey=949a9ef5c41332006d1eb3fa2927090a"/>
+</record_update>

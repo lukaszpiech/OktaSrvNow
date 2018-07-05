@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>x_okta2_occ.SSOOktaApiHelper</api_name>
+        <client_callable>false</client_callable>
+        <description/>
+        <name>SSOOktaApiHelper</name>
+        <script><![CDATA[var SSOOktaApiHelper = Class.create();
+SSOOktaApiHelper.prototype = {
+    initialize: function() {
+        this.settings = new x_okta2_occ.SSOGeneralSettingsHelper();
+        this.logger = new x_okta2_occ.SSOOutputLogHelper();
+
+        this.devMode = false;
+
+        this.result = {};
+        this.result.errorMessage = "";
+        this.result.errorCode = "";
+
+    },
+
+    //Return the base url to the Okta API
+    getEndpointBase: function() {
+        return this.settings.getProperty("okta_instance");
+    },
+
+    sendRequest: function(
+        method, // (string) POST, GET, PUT, PATCH, DELTE
+        endpoint, // (string) full REST endpoint URI
+        headers, // (array) Array of name/value pair objects
+        body // (JS Object) Javascript object representing the body
+    ) {
+        var func = "sendRequest";
+        this.logger.log(5, this.type, func, "Entering method");
+        this.logger.log(5, this.type, func, "method: " + method);
+        if (this.devMode) {
+            //We don't want to publish this on customer's instances due
+            //to the potential for secure information to be displayed
+            //in the log file
+            this.logger.log(5, this.type, func, "endpoint: " + endpoint);
+        
+            this.logger.log(5, this.type, func, "headers: " + new global.JSON().encode(headers));
+
+            this.logger.log(5, this.type, func, "body: " + body);
+        }
+        try {
+            var request = new sn_ws.RESTMessageV2();
+            request.setEndpoint(endpoint);
+            request.setHttpMethod(method.toLowerCase());
+            for (var i = 0; i < headers.length; i++) {
+                request.setRequestHeader(headers[i].name, headers[i].value);
+            }
+            request.setRequestBody(new global.JSON().encode(body));
+
+            var response = request.execute();
+
+            return response;
+
+        } catch (e) {
+            this.logger.log(0, this.type, func, "Exception in sendRequest method");
+
+        }
+
+    },
+
+    getDefaultRequestHeaders: function() {
+        var h = [];
+        h.push({ "name": "Accept", "value": "application/json" });
+        h.push({ "name": "Content-Type", "value": "application/json" });
+        return h;
+    },
+
+    responseWasSuccessful: function(
+        restResponse // (RESTResponseV2) 
+    ) {
+        var func = "responseWasSuccessful";
+        this.logger.log(5, this.type, func, "Entering Function");
+        var success = true;
+
+        if (restResponse.haveError()) {
+            var errorCode = restResponse.getErrorCode();
+            var errorMessage = restResponse.getErrorMessage();
+            this.logger.log(0, this.type, func, "Error in API Request with error code: " + errorCode + " and Error Message: " + errorMessage);
+            this.result.errorMessage = errorMessage;
+            this.result.errorCode = errorCode;
+            this.result.errorMessage += "\n" + restResponse.getBody();
+            this.result.oktaError = new global.JSON().decode(restResponse.getBody());
+            success = false;
+        }
+
+
+
+        return success;
+    },
+
+    // Gets the Link header from the Response Headers and retrieves the proper URI
+    getLinkHeaderVal: function(
+        restResponse //(RESTResponseV2)
+    ) {
+        var headerString = restResponse.getHeader("Link");
+        var grps = /^<(https:\/\/.*)>\;\ rel\=\"next\".*$/ (headerString);
+        if (grps && grps.length > 1) {
+            return grps[1];
+        }
+        return "";
+    },
+
+    getGlideDateTimeFromIsoString: function(
+        dateString // (String) in this format: 2017-03-09T16:19:07.873Z
+    ) {
+        var func = "getGlideDateTimeFromIsoString";
+        this.logger.log(6, this.type, func, "Entering Function");
+        this.logger.log(7, this.type, func, "dateString: " + dateString);
+        var date = dateString.split("T")[0];
+        this.logger.log(7, this.type, func, "Date: " + date);
+        var time = dateString.split("T")[1].split(".")[0];
+        this.logger.log(7, this.type, func, "Time: " + time);
+        var gdt = new GlideDateTime(date + " " + time);
+        return gdt;
+    },
+
+
+    /*
+    Okta Org API Errors have a Causes array where it lists causes for the error
+    Return null if there are no errors or no error causes
+    */
+    getOktaErrorCauses: function() {
+        var func = "getOktaErrorCauses";
+        this.logger.log(5, this.type, func, "Entering method");
+
+        var res = this.result;
+
+        if (!res || !res.oktaError || !res.oktaError.errorCauses || !res.oktaError.errorCauses.length || res.oktaError.errorCauses.length == 0) {
+            return;
+        }
+
+        this.logger.log(5, this.type, func, "res.oktaError: " + res.oktaError);
+        this.logger.log(5, this.type, func, "res.oktaError.errorCauses: " + res.oktaError.errorCauses);
+
+        var l = [];
+        for (var i = 0; i < res.oktaError.errorCauses.length; i++) {
+            if (res.oktaError.errorCauses[i].errorSummary) {
+                l.push(res.oktaError.errorCauses[i].errorSummary);
+            }
+        }
+        return l;
+    },
+
+
+    /*
+    Okta Org API Error messages with codes, summaries and causes.
+    Returns a formatted string of the detailed error message if any
+    */
+    generateOktaErrorMessage: function(
+        html, // (true/false/null) format message in html
+        detailed // (true/false/null) give all okta error details or just a small summary
+    ) {
+        var func = "generateOktaErrorMessage";
+        this.logger.log(5, this.type, func, "Entering method");
+        this.logger.log(5, this.type, func, "html: " + html + " detailed: " + detailed);
+
+        var newline = "\n";
+        if (html) {
+            newline = "<br/>";
+        }
+        try {
+            var res = this.result;
+            this.logger.log(5, this.type, func, "res: " + new global.JSON().encode(res));
+            this.logger.log(5, this.type, func, "res.oktaError: " + new global.JSON().encode(res.oktaError));
+            this.logger.log(5, this.type, func, "res.errorMessage: " + res.errorMessage);
+
+            if (!res || (!res.oktaError && !res.errorMessage)) {
+                return "";
+            }
+
+            //this.logger.log(5, this.type, func, "res.oktaError.errorCauses: " + new global.JSON().encode(res.oktaError.errorCauses));
+
+
+            var oerror = res.oktaError;
+            var msg = "";
+
+            if (detailed) {
+                if (oerror.errorCode) {
+                    msg += newline + "ERROR CODE: " + oerror.errorCode;
+                }
+                if (oerror.errorSummary) {
+                    msg += newline + "Summary: " + oerror.errorSummary;
+                }
+            } 
+
+
+            /*----------------------------------------------------------------------*/
+            // Handle General Error Messages from request itself
+            /*----------------------------------------------------------------------*/
+            // If there is an HTTP errorMessage rather than an Okta error, we should show it
+            if (!res.oktaError && res.errorMessage) {
+                msg += newline + "Error Message: " + res.errorMessage;
+                this.logger.log(5, this.type, func, "new error message: " + msg);
+            }
+
+            /*----------------------------------------------------------------------*/
+            //Handle Error Causes
+            /*----------------------------------------------------------------------*/
+            this.logger.log(5, this.type, func, "Getting error causes");
+            var ec = this.getOktaErrorCauses();
+            if (!ec) {
+                ec = "";
+                this.logger.log(5, this.type, func, "No error causes");
+            } else {
+                this.logger.log(5, this.type, func, ec.length+" Error causes");
+            }
+            for (var i = 0; i < ec.length; i++) {
+                msg += "- " + this.getPrettyOktaError(ec[i]) + newline;
+            }
+            if (msg) {
+                msg = "Okta Error Details" + newline + msg;
+            }
+
+
+            /*----------------------------------------------------------------------*/
+            // No message yet, but there is a summary - display it
+            /*----------------------------------------------------------------------*/
+            if( !msg && oerror.errorSummary ) {
+                msg += this.getPrettyOktaError(oerror.errorSummary);
+            }
+
+
+            return msg;
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error generating Error Message");
+        }
+
+    },
+
+    getPrettyOktaError: function(
+        err // (string) error message to try to match
+    ) {
+
+        switch (err) {
+            case "subDomain: An object with this field already exists":
+                return "Okta Prefix is already in use, please select another";
+            case "name: An object with this field already exists":
+                return "Company Name is already in use, please select another";
+            case "Not found: Resource not found: servicenow_ud (App)":
+                //return "Please contact Okta and have them enable the 'servicenow_ud' application in your okta tenant";
+                var contact = "snowud@okta.com";
+                var orgName = this.settings.getProperty("okta_instance");
+                //Org has been generated at this point, set it as an existing customer if it is not already
+                this.settings.setProperty("existing_customer", true);
+                var em = "Error provisioning the Identity Provider. ";
+                em += " This is new functionality in Okta that is not yet available by default.";
+                em += " Please contact us at ";
+                em += "<a href='mailto:"+contact+"?subject=[SNOWUD] assign new app to "+orgName;
+                em += "&body=Hello Okta Support.  I have just enabled my Okta OCC account for ServiceNow,";
+                em += " and it looks like I need access to the newest ServiceNow integration to take";
+                em += " full advantage.  Can you please enable the \"ServiceNow_UD\" app in Okta, for ";
+                em += "tenant "+orgName+"?'>"+contact+"</a> to have the new ServiceNow integration enabled for your Okta tenant.";
+                return em;
+   
+            default:
+                return err;
+        }
+
+    },
+
+
+    type: 'SSOOktaApiHelper'
+};
+]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>app.developer</sys_created_by>
+        <sys_created_on>2017-03-21 21:09:05</sys_created_on>
+        <sys_id>689a9ef5c41332006d1eb3fa29270911</sys_id>
+        <sys_mod_count>60</sys_mod_count>
+        <sys_name>SSOOktaApiHelper</sys_name>
+        <sys_package display_value="Okta Identity Cloud for ServiceNow" source="x_okta2_occ">2e691ab90f5bf60047b38ecce1050e30</sys_package>
+        <sys_policy>protected</sys_policy>
+        <sys_scope display_value="Okta Identity Cloud for ServiceNow">2e691ab90f5bf60047b38ecce1050e30</sys_scope>
+        <sys_update_name>sys_script_include_689a9ef5c41332006d1eb3fa29270911</sys_update_name>
+        <sys_updated_by>app.developer</sys_updated_by>
+        <sys_updated_on>2017-06-08 14:00:04</sys_updated_on>
+    </sys_script_include>
+</record_update>

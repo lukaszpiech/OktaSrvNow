@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update sys_domain="global" table="sys_script_client">
+    <sys_script_client action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <applies_extended>false</applies_extended>
+        <condition/>
+        <description>Check for any application dependencies for configuring this application</description>
+        <field>admin_username</field>
+        <global>true</global>
+        <messages/>
+        <name>Check for Application Dependencies</name>
+        <order/>
+        <script><![CDATA[function onLoad() {
+	//Type appropriate comment here, and begin script below
+	//handlePluginCheck();
+	//handlePluginEnablementCheck();
+	handleNotices();
+	
+}
+
+function handleNotices(){
+	var ga = new GlideAjax("x_okta2_occ.SSOGeneralSettingsAjaxHelper");
+	ga.addParam("sysparm_name", "getOnLoadNotices");
+	ga.getXMLAnswer(handleNoticesResult);
+}
+
+function handleNoticesResult(response) {
+	var notices = {};
+	if( response ){
+		notices = JSON.parse(response);
+		handlePluginInstalled(notices.pluginInstalled);
+		handlePluginEnabled(notices.pluginEnabled);
+		handleStatus(notices.state, notices.status);
+	}
+}
+
+function handlePluginInstalled( installed ){
+	if( installed == false || installed == "false" ){
+		g_form.addErrorMessage("ERROR: The Multi-Provider SSO Plugin is not installed on this instance.  This plugin must be installed before the Okta SSO component can be configured.");
+	}
+}
+
+function handlePluginEnabled( enabled ){
+	if( enabled == false || enabled == "false" ){
+		g_form.addErrorMessage("WARNING: The Multi-Provider SSO Plugin is not enabled on this instance.  This plugin must be installed before Single Sign-on will function.");
+	}
+}
+
+function handleStatus( state, status ){
+	if( status && status.length > 0 ){
+		status = stripLogs(status);
+		status = status.replace(/\n/g, "<br/>");
+		if( state == "Error" ){
+			g_form.addErrorMessage(status);
+		} else {
+			//g_form.addInfoMessage(status); //Removed because logs weren't getting stripped and that is the only thing we show on success
+		}
+	}
+}
+
+function stripLogs( msg ){
+	var pos = msg.indexOf("\n\n---------------");
+	if( pos > -1 ){
+		return msg.substring(0, pos);
+	} else {
+		return msg;
+	}
+}
+/*
+
+function handlePluginCheck() {
+	var ga = new GlideAjax("x_okta2_occ.SSOGeneralSettingsAjaxHelper");
+	ga.addParam("sysparm_name", "multiSsoPluginInstalled");
+	ga.getXMLAnswer(oktaSsoIsPluginInstalledResult);
+}
+
+function oktaSsoIsPluginInstalledResult(response) {
+	if( response == "false" || response == false ){
+		g_form.addErrorMessage("ERROR: The Multi-Provider SSO Plugin is not installed on this instance.  This plugin must be installed before the Okta SSO component can be configured.");
+	}
+}
+
+function handlePluginEnablementCheck() {
+	var ga = new GlideAjax("x_okta2_occ.SSOGeneralSettingsAjaxHelper");
+	ga.addParam("sysparm_name", "multiSsoPluginEnabled");
+	ga.getXMLAnswer(oktaSsoIsPluginEnabledResult);
+}
+
+function oktaSsoIsPluginEnabledResult(response) {
+	if( response == "false" || response == false ){
+		g_form.addErrorMessage("WARNING: The Multi-Provider SSO Plugin is not enabled on this instance.  This plugin must be installed before Single Sign-on will function.");
+	}
+}
+*/]]></script>
+        <sys_class_name>sys_script_client</sys_class_name>
+        <sys_created_by>app.developer</sys_created_by>
+        <sys_created_on>2017-03-28 03:58:29</sys_created_on>
+        <sys_domain>global</sys_domain>
+        <sys_domain_path>/</sys_domain_path>
+        <sys_id>649a9ef5c41332006d1eb3fa29270910</sys_id>
+        <sys_mod_count>21</sys_mod_count>
+        <sys_name>Check for Application Dependencies</sys_name>
+        <sys_overrides/>
+        <sys_package display_value="Okta Identity Cloud for ServiceNow" source="x_okta2_occ">2e691ab90f5bf60047b38ecce1050e30</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Okta Identity Cloud for ServiceNow">2e691ab90f5bf60047b38ecce1050e30</sys_scope>
+        <sys_update_name>sys_script_client_649a9ef5c41332006d1eb3fa29270910</sys_update_name>
+        <sys_updated_by>john@yansalabs.com</sys_updated_by>
+        <sys_updated_on>2017-10-06 14:47:01</sys_updated_on>
+        <table>x_okta2_occ_provider_setup</table>
+        <type>onLoad</type>
+        <ui_type>0</ui_type>
+        <view/>
+    </sys_script_client>
+</record_update>

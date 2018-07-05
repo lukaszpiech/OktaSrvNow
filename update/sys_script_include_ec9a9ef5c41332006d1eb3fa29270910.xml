@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>x_okta2_occ.ServerGlideAjaxHelper</api_name>
+        <client_callable>false</client_callable>
+        <description>A helper library for server side REST Request access to GlideAjax functions</description>
+        <name>ServerGlideAjaxHelper</name>
+        <script><![CDATA[var ServerGlideAjaxHelper = Class.create();
+ServerGlideAjaxHelper.prototype = {
+    initialize: function() {
+        this.settings = new x_okta2_occ.SSOGeneralSettingsHelper();
+        this.logger = new x_okta2_occ.SSOOutputLogHelper();
+    },
+
+    postGlideAjaxRequest: function(
+        lib, //(instance of library) An instance of the library we are using (eg. new global.MyScriptInclude())
+        method, //(string) name of the function to call in the script include
+        parameters //(array of name/value pair objects)
+
+    ) {
+        var func = "postGlideAjaxRequest";
+        this.logger.log(5, this.type, func, "Entering Function");
+        this.logger.log(5, this.type, func, "lib: " + lib.type);
+        this.logger.log(5, this.type, func, "method: " + method);
+        this.logger.log(5, this.type, func, "parameters: " + new global.JSON().encode(parameters));
+
+        try {
+            //fake out the ajax request object
+            req = new Object();
+            lib.___result = {}; //any response attributes will go here
+
+            lib.logger = this.logger;
+
+            //override the getParameter function
+            lib.getParameter = function(name) {
+                this.logger.log(5, this.type, func, "Entering Function getParameter");
+                return req[name];
+            };
+
+            lib.newItem = function(name){
+            	this.logger.log(5, this.type, func, "Entering Function newItem");
+                
+            	if(!name){
+            		name = "item";
+            	}
+            	lib.___result[name] = {};
+            	return lib;
+            };
+
+            //override the setAttribute function so it saves attributes to the ___result member
+            lib.setAttribute = function(name, value) {
+            	this.logger.log(5, this.type, func, "Entering Function setAttribute");
+                lib.___result[name] = "" + value;
+            };
+
+            //Set up the parameters
+            for (var i = 0; i < parameters.length; i++) {
+                req[parameters[i].name] = parameters[i].value;
+            }
+
+            //override the AbstractAjaxProcessor request object with our custom one
+            lib.request = req;
+
+            //execute the function
+            this.logger.log(5, this.type, func, "Before execution");
+            lib[method]();
+            this.logger.log(5, this.type, func, "After Execution");
+            this.logger.log(5, this.type, func, "lib: "+ lib.getParameter);
+            this.logger.log(5, this.type, func, "lib: "+ new global.JSON().encode(lib));
+
+
+            return lib.___result;
+
+        } catch (e) {
+            this.logger.reportException(this.type, func, e, "Error posting Ajax Request");
+            return;
+        }
+
+    },
+
+
+
+    type: 'ServerGlideAjaxHelper'
+};
+]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>app.developer</sys_created_by>
+        <sys_created_on>2017-03-23 22:29:32</sys_created_on>
+        <sys_id>ec9a9ef5c41332006d1eb3fa29270910</sys_id>
+        <sys_mod_count>40</sys_mod_count>
+        <sys_name>ServerGlideAjaxHelper</sys_name>
+        <sys_package display_value="Okta Identity Cloud for ServiceNow" source="x_okta2_occ">2e691ab90f5bf60047b38ecce1050e30</sys_package>
+        <sys_policy>protected</sys_policy>
+        <sys_scope display_value="Okta Identity Cloud for ServiceNow">2e691ab90f5bf60047b38ecce1050e30</sys_scope>
+        <sys_update_name>sys_script_include_ec9a9ef5c41332006d1eb3fa29270910</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2017-10-05 14:27:11</sys_updated_on>
+    </sys_script_include>
+</record_update>

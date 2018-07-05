@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update sys_domain="global" table="sys_script_client">
+    <sys_script_client action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <applies_extended>false</applies_extended>
+        <condition/>
+        <description>Instructions based on the state</description>
+        <field>admin_username</field>
+        <global>true</global>
+        <messages/>
+        <name>Instructions</name>
+        <order/>
+        <script><![CDATA[function onLoad() {
+	//Type appropriate comment here, and begin script below
+	var msg = "";
+	if( g_form.getValue("state") == "Complete" ){
+		msg += "<strong>Single Sign-on Provisioning Complete</strong><br/>";
+		msg += "<br/>";
+		msg += "1. Click the 'View Identity Provider Record' link at the bottom of this page<br/>";
+		var link = g_form.getValue("okta_instance");
+		msg += "2. Configure your Okta instance by clicking on <a href='"+link+"' target='_blank'>"+link+"</a><br/>";
+	} else {
+		msg += "Use the following form to automate the provisioning of both Okta and ServiceNow identity components to facilitate the setup for Single Sign-on through Okta.<br/>";
+		msg += "<br/>";
+		msg += "Existing Okta Customers<br/>";
+		msg += '- Check the "Existing Customer" checkbox<br/>';
+		msg += "- Fill in your Okta instance and API token.  Please see the Okta Documentation link to discover how to generate an API key<br/>";
+		msg += "<br/>";
+		msg += "New Okta Customers without an Okta Instance<br/>";
+		msg += '- Uncheck the "Existing Customer" checkbox<br/>';
+		msg += "- Enter the desired Okta Prefix.  This is will be the subdomain name for your Okta instance (eg. xxxxx.okta.com)<br/>";
+		msg += "- Enter the desired Company Name as it will be displayed in your Okta account<br/>";
+		msg += "- Enter the desired first and last names for the Okta Administrator user that will be auto-generated<br/>";
+		msg += "- Specify the Email address for the Administrator as well as the desired password for the new account<br/>";
+		msg += "- Select a password recovery question and then specify an answer to the question<br/>";
+		msg += "<br/>";
+		msg += "Optional:  Advanced Checkbox<br/>";
+		msg += "Checking this checkbox will provide additional information for troubleshooting capabilities<br/>";
+		msg += "<br/>";
+		msg += "Actions:<br/>";
+		msg +='- "Save Setup": Save the settings so that you can come back later to finish the setup process<br/>';
+		msg += '- "Provision": Validate the information provided and automatically provision the Okta and ServiceNow settings to get your instance ready for SSO Authentication<br/>';
+		msg += '- "Reset": If you need to start over or clear out of an error, click Reset to return the settings to default';
+	}
+	g_form.addInfoMessage(msg);
+	
+	
+	
+}]]></script>
+        <sys_class_name>sys_script_client</sys_class_name>
+        <sys_created_by>app.developer</sys_created_by>
+        <sys_created_on>2017-04-04 01:40:15</sys_created_on>
+        <sys_domain>global</sys_domain>
+        <sys_domain_path>/</sys_domain_path>
+        <sys_id>a89a9ef5c41332006d1eb3fa29270910</sys_id>
+        <sys_mod_count>16</sys_mod_count>
+        <sys_name>Instructions</sys_name>
+        <sys_overrides/>
+        <sys_package display_value="Okta Identity Cloud for ServiceNow" source="x_okta2_occ">2e691ab90f5bf60047b38ecce1050e30</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Okta Identity Cloud for ServiceNow">2e691ab90f5bf60047b38ecce1050e30</sys_scope>
+        <sys_update_name>sys_script_client_a89a9ef5c41332006d1eb3fa29270910</sys_update_name>
+        <sys_updated_by>app.developer</sys_updated_by>
+        <sys_updated_on>2017-06-08 14:46:20</sys_updated_on>
+        <table>x_okta2_occ_provider_setup</table>
+        <type>onLoad</type>
+        <ui_type>10</ui_type>
+        <view/>
+    </sys_script_client>
+</record_update>
